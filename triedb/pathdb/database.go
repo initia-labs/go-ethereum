@@ -203,7 +203,6 @@ func New(diskdb ethdb.Database, config *Config) *Database {
 			log.Crit("Failed to disable database", "err", err) // impossible to happen
 		}
 	}
-	log.Warn("Path-based state scheme is an experimental feature")
 	return db
 }
 
@@ -403,9 +402,6 @@ func (db *Database) Recoverable(root common.Hash) bool {
 	return checkHistories(db.freezer, *id+1, dl.stateID()-*id, func(m *meta) error {
 		if m.parent != root {
 			return errors.New("unexpected state history")
-		}
-		if len(m.incomplete) > 0 {
-			return errors.New("incomplete state history")
 		}
 		root = m.root
 		return nil

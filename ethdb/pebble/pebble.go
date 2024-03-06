@@ -590,10 +590,7 @@ func (b *batch) Replay(w ethdb.KeyValueWriter) error {
 	reader := b.b.Reader()
 	for {
 		kind, k, v, ok, err := reader.Next()
-		if err != nil {
-			return err
-		}
-		if !ok {
+		if !ok || err != nil {
 			break
 		}
 
