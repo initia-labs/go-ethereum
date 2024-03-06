@@ -38,6 +38,10 @@ type (
 )
 
 func (evm *EVM) precompile(addr common.Address) (PrecompiledContract, bool) {
+	if p, ok := evm.precompiles[addr]; ok {
+		return p, ok
+	}
+
 	var precompiles map[common.Address]PrecompiledContract
 	switch {
 	case evm.chainRules.IsCancun:
@@ -121,6 +125,16 @@ type EVM struct {
 	// available gas is calculated in gasCall* according to the 63/64 rule and later
 	// applied in opCall*.
 	callGasTemp uint64
+	// precompiles passed from cosmos side
+	precompiles map[common.Address]PrecompiledContract
+}
+
+// NewEVM returns a new EVM. The returned EVM is not thread safe and should
+// only ever be used *once*.
+func NewEVMWithPrecompiles(blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig *params.ChainConfig, config Config, precompiles map[common.Address]PrecompiledContract) *EVM {
+	evm := NewEVM(blockCtx, txCtx, statedb, chainConfig, config)
+	evm.precompiles = precompiles
+	return evm
 }
 
 // NewEVM returns a new EVM. The returned EVM is not thread safe and should
