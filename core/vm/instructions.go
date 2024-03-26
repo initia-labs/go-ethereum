@@ -344,6 +344,13 @@ func opReturnDataCopy(pc *uint64, interpreter *EVMInterpreter, scope *ScopeConte
 
 func opExtCodeSize(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte, error) {
 	slot := scope.Stack.peek()
+
+	// allow precompiles to be bypassed
+	if _, isPrecompile := interpreter.evm.precompile(slot.Bytes20()); isPrecompile {
+		slot.SetUint64(1)
+		return nil, nil
+	}
+
 	slot.SetUint64(uint64(interpreter.evm.StateDB.GetCodeSize(slot.Bytes20())))
 	return nil, nil
 }
