@@ -42,6 +42,15 @@ type PrecompiledContract interface {
 	Run(input []byte) ([]byte, error) // Run runs the precompiled contract
 }
 
+type ExtendedPrecompiledContract interface {
+	ExtendedRun(
+		caller ContractRef,
+		input []byte,
+		suppliedGas uint64,
+		readOnly bool,
+	) ([]byte, uint64 /* gas cost */, error)
+}
+
 // PrecompiledContractsHomestead contains the default set of pre-compiled Ethereum
 // contracts used in the Frontier and Homestead releases.
 var PrecompiledContractsHomestead = map[common.Address]PrecompiledContract{
@@ -176,6 +185,37 @@ func RunPrecompiledContract(p PrecompiledContract, input []byte, suppliedGas uin
 	suppliedGas -= gasCost
 	output, err := p.Run(input)
 	return output, suppliedGas, err
+}
+
+// ExtendedRunPrecompiledContract runs and evaluates the output of a precompiled contract.
+// It returns
+// - the returned bytes,
+// - the _remaining_ gas,
+// - any error that occurred
+func ExtendedRunPrecompiledContract(
+	p PrecompiledContract,
+	caller ContractRef,
+	input []byte,
+	suppliedGas uint64,
+	readOnly bool,
+) (
+	ret []byte,
+	remainingGas uint64,
+	err error,
+) {
+	if p, ok := p.(ExtendedPrecompiledContract); ok {
+		output, gasCost, err := p.ExtendedRun(caller, input, suppliedGas, readOnly)
+		if err != nil {
+			return nil, 0, err
+		} else if suppliedGas < gasCost {
+			return nil, 0, ErrOutOfGas
+		}
+
+		suppliedGas -= gasCost
+		return output, suppliedGas, err
+	}
+
+	return RunPrecompiledContract(p, input, suppliedGas)
 }
 
 // ECRECOVER implemented as a native contract.
