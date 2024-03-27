@@ -462,6 +462,12 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 
 		return nil, common.Address{}, 0, ErrContractAddressCollision
 	}
+	// Ensure there's no collision in cosmos side
+	if evm.Config.ContractCreatedHook != nil {
+		if err = evm.Config.ContractCreatedHook(address); err != nil {
+			return nil, common.Address{}, 0, ErrContractAddressCollision
+		}
+	}
 	// Create a new account on the state
 	snapshot := evm.StateDB.Snapshot()
 	evm.StateDB.CreateAccount(address)

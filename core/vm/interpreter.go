@@ -25,12 +25,21 @@ import (
 	"github.com/holiman/uint256"
 )
 
+type (
+	// ContractCreatedHook is the signature of a callback function that is called
+	// when a contract is created.
+	ContractCreatedHook func(common.Address) error
+)
+
 // Config are the configuration options for the Interpreter
 type Config struct {
 	Tracer                  *tracing.Hooks
 	NoBaseFee               bool  // Forces the EIP-1559 baseFee to 0 (needed for 0 price calls)
 	EnablePreimageRecording bool  // Enables recording of SHA3/keccak preimages
 	ExtraEips               []int // Additional EIPS that are to be enabled
+
+	// ContractCreatedHook is a callback that is called when a new contract is created.
+	ContractCreatedHook
 }
 
 // ScopeContext contains the things that are per-call, such as stack and memory,
